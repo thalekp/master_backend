@@ -12,8 +12,7 @@ def get_graph():
     unprofitable_parks = get_unprofitable_parks()
     parks = list(unprofitable_parks.keys())
     labels = ["dayahead_reported", "prod"]
-    abnormal_prices, extreme_prices, unforeseen_events, abnormal_volumes, non_extreme_parks = determine_loss_factors()
-    print(abnormal_prices, extreme_prices, unforeseen_events, abnormal_volumes, non_extreme_parks)
+    dict, abnormal_prices, extreme_prices, unforeseen_events, abnormal_volumes, non_extreme_parks = determine_loss_factors()
     if parks: 
         data = []
         for price_area in abnormal_prices+list(extreme_prices.keys()):

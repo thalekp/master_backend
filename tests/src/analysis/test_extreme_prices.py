@@ -3,7 +3,7 @@ from src.analysis.extreme_prices import find_extreme_prices
 from services.constants import get_date
 from datetime import date
 
-def test_price_abnormality_se3():
+def test_extreme_prices_se3():
     target_date = date(2025, 1, 26)
     extreme_reg_prices = find_extreme_prices('SE3', target_date)
     assert len(extreme_reg_prices)==0
@@ -11,7 +11,7 @@ def test_price_abnormality_se3():
     extreme_reg_prices = find_extreme_prices('SE3', target_date)
     assert len(extreme_reg_prices)>0
 
-def test_price_abnormality_no3():
+def test_extreme_prices_no3():
     target_date = date(2025, 1, 9)
     extreme_reg_prices = find_extreme_prices('NO3', target_date)
     assert len(extreme_reg_prices)==0
@@ -19,7 +19,7 @@ def test_price_abnormality_no3():
     extreme_reg_prices = find_extreme_prices('NO3', target_date)
     assert len(extreme_reg_prices)==0
     
-def test_price_abnormality_se2():
+def test_extreme_prices_se2():
     target_date = date(2025, 1, 7)
     extreme_reg_prices = find_extreme_prices('SE2', target_date)
     assert len(extreme_reg_prices)==0

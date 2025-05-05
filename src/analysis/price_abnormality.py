@@ -9,4 +9,5 @@ def price_abnormality(price_area, target_day=None):
     reg_price = read_price('reg', price_area, target_day)['value'].values.tolist()
     z_reg_price = [(r-reg_median)/reg_std for r in reg_price]
     max_price_extremity = max(z_reg_price)
-    return max_price_extremity
+    high_prices = [i for z, i in zip(z_reg_price, range(24)) if abs(z)>1]
+    return max_price_extremity, high_prices

@@ -55,8 +55,6 @@ def api_get_date():
 
 @app.get("/api/set_date")
 def api_set_date(date:str):
-    print("set date")
-    print(date)
     stats_df = pd.DataFrame({"date": [date]})
     stats_df.to_csv("files/date.csv", index=False)
     return {

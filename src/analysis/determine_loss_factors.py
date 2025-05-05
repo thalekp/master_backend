@@ -23,7 +23,7 @@ def determine_loss_factors():
     for pa in price_areas_list():
         connected_parks = get_price_area_parks(pa)
         relevant_parks = len([p for p in connected_parks if p in unprofitable_parks])
-        if price_abnormality(pa)>1 and relevant_parks>0: 
+        if price_abnormality(pa)[0]>1 and relevant_parks>0: 
             for park in get_price_area_parks(pa):
                 explained_parks.append(park)
             timesteps = find_extreme_prices(pa)
@@ -38,7 +38,7 @@ def determine_loss_factors():
         else: unprofitable = False
         abnormal_volume = False
         abnormal_timesteps = unforeseen_event(p)
-        price_area = price_areas().get(park.lower())
+        price_area = price_areas().get(p.lower())
         
         if len(abnormal_timesteps)>3 and p in unprofitable_parks: 
             unforeseen_events.append(p.capitalize())
@@ -51,10 +51,16 @@ def determine_loss_factors():
             else: 
                 abnormal_volumes.append(p.capitalize())
                 
+        if p and not p in explained_parks:
+            if abs(volume_abnormality_score)>abs(price_abnormality(price_area)[0]):
+                abnormal_volumes.insert(0, park.capitalize())
+            else:
+                non_extreme_prices.append(price_area)             
         price_status = 'normal'
         high_price_hours = []
         if price_area in non_extreme_prices: 
             price_status = 'high'
+            high_price_hours = price_abnormality(price_area)[1]
         if price_area in extreme_prices.keys():
             price_status = 'extreme'
             high_price_hours = extreme_prices.get(price_area)
@@ -70,12 +76,6 @@ def determine_loss_factors():
         output_dict[p] = park_explanation
     non_extreme_parks = [p.capitalize() for p in unprofitable_parks if p not in explained_parks]
     
-    
-    for park in non_extreme_parks:
-        price_area = price_areas().get(park.lower())
-        if abs(volume_abnormality(park.lower()))[0]>abs(price_abnormality(price_area)):
-            abnormal_volumes.insert(0, park.capitalize())
-        else:
-            non_extreme_prices.append(price_area)
     print(output_dict)
-    return non_extreme_prices, extreme_prices, unforeseen_events, abnormal_volumes, non_extreme_parks
+    #return output_dict
+    return output_dict, non_extreme_prices, extreme_prices, unforeseen_events, abnormal_volumes, non_extreme_parks

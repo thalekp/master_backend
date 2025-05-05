@@ -3,7 +3,7 @@ from src.analysis.unforeseen_event import unforeseen_event
 from services.constants import get_date
 from datetime import date
 
-def test_price_abnormality_maalarberget():
+def test_unforeseen_event_maalarberget():
     target_date = date(2025, 1, 26)
     strange_hours = unforeseen_event('maalarberget', target_date)
     assert len(strange_hours)<3
@@ -11,7 +11,7 @@ def test_price_abnormality_maalarberget():
     strange_hours = unforeseen_event('maalarberget', target_date)
     assert len(strange_hours)<3
 
-def test_price_abnormality_roan():
+def test_unforeseen_event_roan():
     target_date = date(2025, 1, 9)
     strange_hours = unforeseen_event('roan', target_date)
     assert len(strange_hours)<3
@@ -22,7 +22,7 @@ def test_price_abnormality_roan():
     strange_hours = unforeseen_event('roan', target_date)
     assert len(strange_hours)>0
     
-def test_price_abnormality_klevberget():
+def test_unforeseen_event_klevberget():
     target_date = date(2025, 1, 7)
     strange_hours = unforeseen_event('klevberget', target_date)
     assert len(strange_hours)>0

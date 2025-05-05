@@ -3,7 +3,6 @@ from services.constants import price_areas
 from services.load_stats import load_diff_production_median, load_diff_production_std, load_reg_median, load_reg_std
 
 def volume_abnormality(park_name, target_date = None):
-        print(park_name)
         dayahead_production, produced_production = read_forecast_data(park_name, target_date, json = False)
         expected_production_volume = sum(dayahead_production)
         actual_production_volume = sum(produced_production)
