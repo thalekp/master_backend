@@ -1,5 +1,4 @@
 import pytest
-from src.analysis.volume_abnormality import volume_abnormality
 from src.analysis.price_abnormality import price_abnormality
 from services.constants import get_date
 from datetime import date

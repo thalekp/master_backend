@@ -11,5 +11,10 @@ def volume_abnormality(park_name, target_date = None):
         median_imbalance_volume = load_diff_production_median(park_name)
         std_imbalance_volume = load_diff_production_std(park_name)
         volume_abnormality = ((imbalance_volume-median_imbalance_volume)/std_imbalance_volume)
-        return volume_abnormality
+        
+        hourly_diff = [a - d for a, d in zip(produced_production,  dayahead_production)]
+        buy_hours = [i for i, diff in enumerate(hourly_diff) if diff < 0]
+        sell_hours = [i for i, diff in enumerate(hourly_diff) if diff > 0]
+
+        return volume_abnormality, buy_hours, sell_hours
         

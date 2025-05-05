@@ -22,7 +22,7 @@ def read_price(price_type, target_area, target_day=None):
         if not target_day:
             target_day = get_date()
         df_day = df[(df["time"].dt.date==target_day) & (df["area"] == target_area)].copy()
-        all_hours = pd.date_range("00:00", "23:00", freq="1H").strftime("%H:%M")
+        all_hours = pd.date_range("00:00", "23:00", freq="1h").strftime("%H:%M")
 
         df_day["time"] = df_day["time"].dt.strftime("%H:%M")
 
@@ -81,7 +81,7 @@ def csv_to_data(park_name, labels, data_type, label_name, value_name, target_day
     else: df = pd.read_csv(f"aneo_data/{park_name}_{data_type}.csv")
     if not target_day:
         target_day = get_date()
-    all_hours = pd.date_range("00:00", "23:00", freq="1H").strftime("%H:%M")
+    all_hours = pd.date_range("00:00", "23:00", freq="1h").strftime("%H:%M")
     datasets = []
     colors = ['info', 'dark', 'light']
     
