@@ -1,0 +1,38 @@
+{
+  "dayahead": {
+    "median": {
+      "klevberget": 818.8,
+      "maalarberget": 1106.95,
+      "roan": 2569.3600000000006
+    },
+    "std": {
+      "klevberget": 873.4635165950153,
+      "maalarberget": 698.0520880878906,
+      "roan": 1687.9847490459758
+    }
+  },
+  "prod": {
+    "median": {
+      "klevberget": 788.0149999999999,
+      "maalarberget": 941.8349999999999,
+      "roan": 2500.86
+    },
+    "std": {
+      "klevberget": 855.3489625655948,
+      "maalarberget": 632.4182508287001,
+      "roan": 1641.703616737639
+    }
+  },
+  "diff": {
+    "median": {
+      "klevberget": 2.5300000000000122,
+      "maalarberget": -48.29499999999999,
+      "roan": -108.43000000000002
+    },
+    "std": {
+      "klevberget": 457.6710686060335,
+      "maalarberget": 304.9732999118796,
+      "roan": 854.3248975755495
+    }
+  }
+}
