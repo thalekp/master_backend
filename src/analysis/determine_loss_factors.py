@@ -52,9 +52,7 @@ def determine_loss_factors():
                 abnormal_volumes.append(p.capitalize())
                 
         if p and not p in explained_parks:
-            if abs(volume_abnormality_score)>abs(price_abnormality(price_area)[0]):
-                abnormal_volumes.insert(0, park.capitalize())
-            else:
+            if not abs(volume_abnormality_score)>abs(price_abnormality(price_area)[0]):
                 non_extreme_prices.append(price_area)             
         price_status = 'normal'
         high_price_hours = []
@@ -74,8 +72,6 @@ def determine_loss_factors():
                 'sell_hours': sell_hours
         }
         output_dict[p] = park_explanation
-    non_extreme_parks = [p.capitalize() for p in unprofitable_parks if p not in explained_parks]
     
-    print(output_dict)
-    #return output_dict
-    return output_dict, non_extreme_prices, extreme_prices, unforeseen_events, abnormal_volumes, non_extreme_parks
+    return output_dict
+    #return output_dict, non_extreme_prices, extreme_prices, unforeseen_events, abnormal_volumes, non_extreme_parks

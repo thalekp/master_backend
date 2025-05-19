@@ -1,12 +1,13 @@
 from fastapi import FastAPI
+from services.config import high_detail
 from fastapi.middleware.cors import CORSMiddleware
 import pandas as pd
-from src.component_data.generate_graphs import get_graph
+from src.component_data.generate_hd_graphs import get_hd_graph
+from src.component_data.generate_ld_graphs import get_ld_graph
 from src.calculations.calc_revenue import calc_revenue
 from src.calculations.calc_dayahead_revenue import calc_dayahead_revenue
 from src.analysis.determine_status import determine_revenue_grade, determine_offset
 from src.component_data.park_report import park_report
-from day_report import get_day_report
 from services.constants import get_date
 from services.parks_list import get_all_parks
 from src.component_data.dashboard_data import generate_dashboard_data
@@ -14,6 +15,9 @@ from src.component_data.park_cards import generate_park_cards
 from src.read_data import read_forecast_data
 from datetime import datetime
 app = FastAPI()
+
+from day_report_high_detail import get_hd_day_report
+from day_report_low_detail import get_ld_day_report
 
 
 
@@ -33,11 +37,17 @@ def get_park_forecast(parkname:str):
     
 @app.get("/api/dayahead/{parkname}")
 def get_forecast(parkname:str):
-    return get_graph(parkname)
+    if high_detail:
+        return get_hd_graph(parkname)
+    else: 
+        return get_ld_graph(parkname)
     
 @app.get("/api/dashboard_graph")
 def get_forecast():
-    result = get_graph()
+    if high_detail:
+        result = get_hd_graph()
+    else:
+        result = get_ld_graph()
     return result
 
 @app.get("/api/date")
@@ -63,10 +73,22 @@ def api_set_date(date:str):
     
 @app.get("/api/dayreport")
 def get_dayreport():
-    return {
-        "report": get_day_report()
-    }
+    if high_detail:
+        return {
+            "report": get_hd_day_report()
+        }
+    else:
+        return {
+            "report": get_ld_day_report()
+        }
 
 @app.get("/api/dashboard_cards")
 def get_dashboard_data():
-    return generate_dashboard_data()
+    if high_detail:
+        return generate_dashboard_data()
+    else:
+        return {'labels': ['total'], 
+                'datasets': [{'label': 'Revenues', 'color': 'info', 'data': []}, 
+                             {'label': 'Grades', 'color': 'info', 'data': []},
+                             {'label': 'Offsets', 'color': 'info', 'data': []}, 
+                             {'label': 'Absolute Offset', 'color': 'info', 'data': []}]}
