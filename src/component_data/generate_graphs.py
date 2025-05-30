@@ -7,25 +7,61 @@ from src.analysis.lower_availability import lower_availability
 from src.analysis.explain_volume_imbalance import explain_volume_imbalance
 from src.analysis.unforeseen_event import unforeseen_event
 from services.constants import price_areas
-import numpy as np
+from src.analysis.determine_status import determine_revenue_grade
+from src.calculations.calc_dayahead_revenue import calc_dayahead_revenue
+from src.calculations.calc_revenue import calc_revenue
 
-def get_hd_graph():
-    print("")
-    print("get graphs")
+def list_to_str(list):
+    if len(list)==0:
+        return ""
+    elif len(list)==1:
+        return list[0]
+    else:
+        return_str = list[0]
+        for index in range(len(list[1:])):
+            if index == len(list)-2:
+                return_str = return_str+" og "+list[index+1]
+            else:
+                return_str = return_str+", "+list[index+1]
+        return return_str
+    
+def sort_parks(list):
+    red_parks = sorted([p for p in list if p.get('color') == 'error'], key=lambda x: x["imbalance"])
+    yellow_parks = sorted([p for p in list if p.get('color') == 'warning'], key=lambda x: x["imbalance"])
+    green_parks = sorted([p for p in list if p.get('color') == 'success'], key=lambda x: x["imbalance"])
+    
+    return red_parks+yellow_parks+green_parks
+
+def get_graph():
     unprofitable_parks = get_unprofitable_parks()
-    print("unprofitable")
     parks = list(unprofitable_parks.keys())
-    print(parks)
+    all_parks = get_all_parks()
     labels = ["dayahead_reported", "prod"]
     loss_factors = determine_loss_factors()
-    data = []
+    all_dayahead_earnings = []
+    all_actual_earnings = []
+    labels = read_forecast_data(all_parks[0]).get("labels")
+        
+    for park in all_parks:
+            dayahead, prod = read_forecast_data(park, json = False)
+            spot = read_price('spot', price_areas().get(park)).value.values.tolist()
+            reg = read_price('reg', price_areas().get(park)).value.values.tolist()
+            dayahead_earnings = [d*s for d, s in zip(dayahead, spot)]
+            all_dayahead_earnings.append(dayahead_earnings)
+            actual_earnings = [de-(d-p)*r for de, d, p, r in zip(dayahead_earnings, dayahead, prod, reg)]
+            all_actual_earnings.append(actual_earnings)
+            
+    data =[]
+    return_data = []
     if parks: 
         for park in parks:
             print(park)
+            exp_str = ""
             price_area = price_areas().get(park)
             factor_data = loss_factors.get(park)
+            factors = []
             if factor_data.get('volume_abnormality'):
-                print("abnormal volume")
+                exp_str = exp_str+"Store volumavvik "
                 forecast = read_forecast_data(park)
                 data.append(forecast)
                 less_wind, model_disagreement, availability_reduction, icing = explain_volume_imbalance(park)
@@ -33,6 +69,7 @@ def get_hd_graph():
                 high_price_hours_set = set(factor_data.get('high_price_hours', []))
                 overlap_hours = sorted(list(buy_hours_set & high_price_hours_set))
                 if overlap_hours:
+                    exp_str = exp_str+"samtidig som høye priser "
                     availability = read_availability_data(parks[0])
                     price = {
                         "title": f"Prisdata for {price_area}, ({park.capitalize()})",
@@ -43,8 +80,9 @@ def get_hd_graph():
                         "yAxis": "€/MWh"
                     }
                     data.append(price)
-                if not icing or len(factor_data.get('abnormally_low_production_hours'))<12:
+                if not icing or len(factor_data.get('abnormally_low_production_hours'))>6:
                     if less_wind or model_disagreement:
+                        factors.append("avvik i værmeldingene")
                         weather_data = read_weather_data(park)
                         labels = weather_data[0].get('labels')
                         colors = ['dark', 'primary', 'secondary']
@@ -62,13 +100,17 @@ def get_hd_graph():
                             "datasets": datasets,
                             "xAxis": "Klokkeslett",
                             "yAxis": "m/s"})
-                    if availability_reduction:
+                    if availability_reduction and len(factor_data.get('abnormally_low_production_hours'))<6:
+                        factors.append("lavere tilgjengelighet enn meldt")
                         availability = read_availability_data(park)
                         data.append(availability)
-                print(parks)
+                    if len(factor_data.get('abnormally_low_production_hours'))>2: factors = ['ising']
+                else:
+                    factors.append("ising")
+                exp_str = exp_str+"på grunn av "+list_to_str(factors)
             else:
-                print("not abnormal volume")
                 availability = read_availability_data(parks[0])
+                exp_str = exp_str+"lavere tilgjengelighet enn forventet "
                 price = {
                         "title": f"Prisdata for {price_area}, ({park.capitalize()})",
                         "labels": availability.get("labels"),
@@ -78,17 +120,23 @@ def get_hd_graph():
                         "yAxis": "€/MWh"
                     }
                 data.append(price)
-            print
+            return_data.append({'park': park, 
+                                'title': {'text': f"Ubalansekostnader for {park.capitalize()}"}, 
+                                'subtitle': {'text': exp_str}, 
+                                'charts' : data, 
+                                'color': determine_revenue_grade(calc_revenue(park), calc_dayahead_revenue(park), park),
+                                'imbalance': calc_revenue(park)-calc_dayahead_revenue(park)})
+            data = []
         high_volume_imbalance_parks = [p for p, data in loss_factors.items() if data.get('volume_abnormality') and p not in unprofitable_parks]
-        print("high volume")
-        print(high_volume_imbalance_parks)
         for park in high_volume_imbalance_parks:
-                print(park)
+                exp_str = "Høye ubalanse volum "
+                factors = []
                 forecast = read_forecast_data(park)
                 data.append(forecast)
                 less_wind, model_disagreement, availability_reduction, icing = explain_volume_imbalance(park)
                 if not icing or len(factor_data.get('abnormally_low_production_hours'))<12:
                     if less_wind or model_disagreement:
+                        factors.append("avvik i værmeldingene")
                         weather_data = read_weather_data(park)
                         labels = weather_data[0].get('labels')
                         colors = ['dark', 'primary', 'secondary']
@@ -107,31 +155,21 @@ def get_hd_graph():
                             "xAxis": "Klokkeslett",
                             "yAxis": "m/s"})
                     if availability_reduction:
+                        factors.append("avvik i tilgjengelighet")
                         availability = read_availability_data(park)
                         data.append(availability)
+                    if len(factor_data.get('abnormally_low_production_hours'))>6: factors = ['ising']
+                else: 
+                    factors = ['ising']
+                return_data.append({'park': park, 
+                                    'title': {'text': f"Ubalansevolum for {park.capitalize()}"}, 
+                                    'subtitle': {'text': exp_str+"på grunn av "+list_to_str(factors)}, 
+                                    'charts' : data, 
+                                    'color': determine_revenue_grade(calc_revenue(park), calc_dayahead_revenue(park), park),
+                                    'imbalance': calc_revenue(park)-calc_dayahead_revenue(park)})
+                data = []
     else:
-        print("else")
         parks = get_all_parks()
-        all_dayahead_earnings = []
-        all_actual_earnings = []
-        labels = read_forecast_data(parks[0]).get("labels")
-        
-        for park in parks:
-            dayahead, prod = read_forecast_data(park, json = False)
-            spot = read_price('spot', price_areas().get(park)).value.values.tolist()
-            reg = read_price('reg', price_areas().get(park)).value.values.tolist()
-            dayahead_earnings = [d*s for d, s in zip(dayahead, spot)]
-            all_dayahead_earnings.append(dayahead_earnings)
-            actual_earnings = [de-(d-p)*r for de, d, p, r in zip(dayahead_earnings, dayahead, prod, reg)]
-            all_actual_earnings.append(actual_earnings)
-            
-        data =[{
-            "title": "Inntekt oversikt",
-            "labels": labels,
-            "datasets": [{"label": "Dayahead inntjening", "color": "dark", "data": np.array(all_dayahead_earnings).sum(axis=0).tolist()}, {"label": "Total inntjening", "color": "info","data": np.array(all_actual_earnings).sum(axis=0).tolist()}],
-            "xAxis": "Klokkeslett",
-            "yAxis": "Euro overskudd"
-        }]
         
         high_volume_imbalance_parks = [park for park, data in loss_factors.items() if data.get('volume_abnormality') and park not in unprofitable_parks]
         for park in high_volume_imbalance_parks:
@@ -160,5 +198,7 @@ def get_hd_graph():
                     if availability_reduction:
                         availability = read_availability_data(park)
                         data.append(availability)
-                
-    return {'data' : data}        
+    graph_park_list = [el.get('park') for el in return_data]
+    sorted_data = sort_parks(return_data)
+               
+    return {'data': sorted_data}     

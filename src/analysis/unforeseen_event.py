@@ -14,7 +14,7 @@ def unforeseen_event(park_name, target_date = None):
                 f = forecast[i]
                 a = actual[i]
                 #print(f"{wind}, {f}, {a}")
-                if (wind > 6 and f > 30 and a <= 0.5 * f) or (a<=0.5 and wind>4):
+                if (wind > 6 and f > 30 and a <= 0.2 * f) or (a<=0.2 and wind>4):
                         suspect_hours.append(i)
         for hour in suspect_hours:
                 if hour+1 in suspect_hours or hour==24 or hour== suspect_hours[-1]:

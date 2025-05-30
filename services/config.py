@@ -5,4 +5,4 @@ extreme_price_threshold = {'NO3': 7,
                            'SE2': 3,
                            'SE3': 3}
 
-high_detail = False
+high_detail = True

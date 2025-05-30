@@ -1,10 +1,7 @@
-from services.load_stats import load_revenue_median, load_revenue_diff_median, load_revenue_stdev, load_revenue_diff_stdev
+from services.load_stats import load_revenue_median, load_revenue_diff_median, load_revenue_stdev, load_revenue_diff_stdev, load_diff_production_median, load_diff_production_std
 from services.config import get_metric
 
 def determine_revenue_grade(revenue,dayahead_revenue = None, park_name = None):
-    #print(f"\n---\ndetermining revenue status for: {park_name}")
-    #print(f"Revenue: {revenue}, dayahead: {dayahead_revenue}")
-
     if dayahead_revenue: metric = revenue-dayahead_revenue
     else: metric = revenue
     if not park_name: park_name = 'total'
@@ -17,6 +14,25 @@ def determine_revenue_grade(revenue,dayahead_revenue = None, park_name = None):
         stdev = load_revenue_stdev(park_name)
     error_level = median-5*stdev
     warning_level = median-2*stdev
+    
+    
+    if metric < error_level:
+        return "error"
+    elif metric < warning_level:
+        return "warning"
+    else:
+        return "success"
+    
+def determine_volume_grade(produced_volume, dayahead_volume = None, park_name = None):
+    if dayahead_volume: metric = produced_volume-dayahead_volume
+    else: metric = produced_volume
+    if not park_name: park_name = 'total'
+
+    median = load_diff_production_median(park_name)
+    stdev = load_diff_production_std(park_name)
+    
+    error_level = median-1.5*stdev
+    warning_level = median-0.9*stdev
         
     
     if metric < error_level:

@@ -2,8 +2,7 @@ from fastapi import FastAPI
 from services.config import high_detail
 from fastapi.middleware.cors import CORSMiddleware
 import pandas as pd
-from src.component_data.generate_hd_graphs import get_hd_graph
-from src.component_data.generate_ld_graphs import get_ld_graph
+from src.component_data.generate_graphs import get_graph
 from src.calculations.calc_revenue import calc_revenue
 from src.calculations.calc_dayahead_revenue import calc_dayahead_revenue
 from src.analysis.determine_status import determine_revenue_grade, determine_offset
@@ -44,10 +43,7 @@ def get_forecast(parkname:str):
     
 @app.get("/api/dashboard_graph")
 def get_forecast():
-    if high_detail:
-        result = get_hd_graph()
-    else:
-        result = get_ld_graph()
+    result = get_graph()
     return result
 
 @app.get("/api/date")

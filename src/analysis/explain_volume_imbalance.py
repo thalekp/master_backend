@@ -37,7 +37,7 @@ def explain_volume_imbalance(park):
     else:
         availability_reduction = False
 
-    if np.mean(actual_wind) > 5 and np.mean(prod) < 0.5 * np.mean(dayahead):
+    if np.mean(actual_wind) > 3 and np.mean(prod) < 0.5 * np.mean(dayahead):
         icing = True
     else:
         icing = False

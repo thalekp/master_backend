@@ -24,10 +24,12 @@ def store_park_production_stats():
 
         for date in dates:
             dayahead, prod = read_forecast_data(park, target_day=date, json=False)
-            diff = [produced - predicted for produced, predicted in zip(prod, dayahead)]
-            dayahead_list.append(sum(dayahead))
-            prod_list.append(sum(prod))
-            diff_list.append(sum(diff))
+            predicted = sum(dayahead)
+            produced = sum(prod)
+            if produced>0 or predicted>0:
+                diff_list.append(produced-predicted)
+                dayahead_list.append(predicted)
+                prod_list.append(produced)
 
         record = {
             "park": park,
