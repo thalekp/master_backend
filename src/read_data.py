@@ -31,6 +31,21 @@ def read_price(price_type, target_area, target_day=None):
         df_day["area"] = df_day["area"].fillna(target_area)
         df_day["value"] = df_day["value"].astype(float).ffill().bfill()
         return df_day
+    elif price_type in ['intraday_VWAP_buy', 'intraday_VWAP_sell']:
+        df = pd.read_csv(f"aneo_data/{target_area.upper()}_market_data.csv")
+        df["time"] =  pd.to_datetime(df["time"])
+        if not target_day:
+            target_day = get_date()
+        df_day = df[(df["time"].dt.date==target_day)].copy()
+        all_hours = pd.date_range("00:00", "23:00", freq="1h").strftime("%H:%M")
+
+        df_day["time"] = df_day["time"].dt.strftime("%H:%M")
+
+        df_day = df_day.set_index("time").reindex(all_hours).reset_index().rename(columns={"index": "time"})
+
+        df_day[price_type] = df_day[price_type].astype(float).ffill().bfill()
+        return df_day[price_type]
+        
     else: 
         return None
 
@@ -43,6 +58,48 @@ def read_forecast_data(park_name, target_day=None, json = True):
     replan_dataset['color'] = "light"
     result.get('datasets').append(replan_dataset)
     return result
+
+def read_intraday_volumes(price_area, target_day = None, json = True):
+    df = pd.read_csv(f"aneo_data/{price_area.upper()}_market_data.csv")
+    if not target_day:
+        target_day = get_date()
+    all_hours = pd.date_range("00:00", "23:00", freq="1h").strftime("%H:%M")
+    labels = ["intraday_vol_buy", "intraday_vol_sell"]
+    
+    df["time"] = pd.to_datetime(df["time"])
+    df = df[df["time"].dt.date == target_day].copy()
+    df["time"] = df["time"].dt.strftime("%H:%M")
+    df = df.sort_values(by="time")
+    df = df.groupby("time", as_index=False).mean(numeric_only=True)
+    df = df.set_index("time").reindex(all_hours).reset_index().rename(columns={"index": "time"})
+    
+    datasets = []
+    
+    color_dict = {'intraday_vol_buy': 'info', 'intraday_vol_sell': 'dark'}
+    
+    for label in labels:
+        new_set = df.copy()
+        new_set[label] = new_set[label].astype(float).ffill().bfill()
+        values = new_set[label].fillna(0).round(2).tolist()
+        if json:
+            datasets.append({
+                    "label": f"{legend_translation.get('label')}",
+                    "color": color_dict.get(label),
+                    "data": values
+                })
+        else: datasets.append(values)
+    if json:
+        return {
+            "title": f'Intradag volum for {price_area}',
+            "labels": all_hours.to_list(),
+            "datasets": datasets,
+            "xAxis": "Klokkeslett",
+            "yAxis": 'volum'
+        }
+    else: 
+        return datasets
+    
+
     
 def read_availability_data(park_name, target_day = None, json = True):
     labels = ["dayahead_planned_avl", "replan_planned_avl"]

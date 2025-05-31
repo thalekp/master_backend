@@ -9,12 +9,12 @@ from datetime import datetime
 from src.calculations.calc_revenue import calc_revenue
 from src.calculations.calc_dayahead_revenue import calc_dayahead_revenue
 from src.read_data import read_forecast_data
-from operator import itemgetter
 from services.parks_list import get_unprofitable_parks, get_all_parks
 import numpy as np
-from src.read_data import read_price
+from src.read_data import read_price, read_intraday_volumes
 from src.analysis.critical_revenue_loss_hours import get_critical_hours
 from src.analysis.blame_list_hours import get_blame_hours
+from src.analysis.park_imbalance_lists import actual_earning, dayahead_earning
 
 
 def enter_new_line(str):
@@ -141,12 +141,9 @@ def get_hd_day_report():
     labels = read_forecast_data(all_parks[0]).get("labels")
         
     for park in all_parks:
-            dayahead, prod = read_forecast_data(park, json = False)
-            spot = read_price('spot', price_areas().get(park)).value.values.tolist()
-            reg = read_price('reg', price_areas().get(park)).value.values.tolist()
-            dayahead_earnings = [d*s for d, s in zip(dayahead, spot)]
+            dayahead_earnings = dayahead_earning(park)
             all_dayahead_earnings.append(dayahead_earnings)
-            actual_earnings = [de-(d-p)*r for de, d, p, r in zip(dayahead_earnings, dayahead, prod, reg)]
+            actual_earnings = actual_earning(park)
             all_actual_earnings.append(actual_earnings)
     
     date = get_date()
