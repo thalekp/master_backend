@@ -5,7 +5,8 @@ _price_stats_df = pd.read_csv("files/price_stats.csv").set_index("price_area")
 _prod_stats_df = pd.read_csv("files/production_stats.csv").set_index("park")
 
 def normalize_name(name):
-    return "maalarberget" if name == "målarberget" else name
+    #return "maalarberget" if name == "målarberget" else name
+    return name.replace('å', 'aa')
 
 def load_revenue_mean(park_name):
     return _revenue_stats_df.loc[normalize_name(park_name), "mean"]

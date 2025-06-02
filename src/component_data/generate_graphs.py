@@ -55,13 +55,12 @@ def get_graph():
     return_data = []
     if parks: 
         for park in parks:
-            print(park)
             exp_str = ""
             price_area = price_areas().get(park)
             factor_data = loss_factors.get(park)
             factors = []
             if factor_data.get('volume_abnormality'):
-                exp_str = exp_str+"Store volumavvik "
+                exp_str = exp_str+"Big volume imbalance "
                 forecast = read_forecast_data(park)
                 data.append(forecast)
                 less_wind, model_disagreement, availability_reduction, icing = explain_volume_imbalance(park)
@@ -69,20 +68,20 @@ def get_graph():
                 high_price_hours_set = set(factor_data.get('high_price_hours', []))
                 overlap_hours = sorted(list(buy_hours_set & high_price_hours_set))
                 if overlap_hours:
-                    exp_str = exp_str+"samtidig som høye priser "
+                    exp_str = exp_str+"coinciding with high prices "
                     availability = read_availability_data(parks[0])
                     price = {
-                        "title": f"Prisdata for {price_area}, ({park.capitalize()})",
+                        "title": f"Pricedata for {price_area}, ({park.capitalize()})",
                         "labels": availability.get("labels"),
-                        "datasets": [{"label": "Spotpris", "color": "dark", "data": list(read_price('spot', price_area)['value'].values)}, 
-                                    {"label": "Reguleringspris", "color": "info", "data":list(read_price('reg', price_area)['value'].values)}],
-                        "xAxis": "Klokkeslett",
+                        "datasets": [{"label": "Spotpris", "color": "info", "data": list(read_price('spot', price_area)['value'].values)}, 
+                                    {"label": "Reguleringspris", "color": "error", "data":list(read_price('reg', price_area)['value'].values)}],
+                        "xAxis": "Time",
                         "yAxis": "€/MWh"
                     }
                     data.append(price)
                 if not icing or len(factor_data.get('abnormally_low_production_hours'))>6:
                     if less_wind or model_disagreement:
-                        factors.append("avvik i værmeldingene")
+                        factors.append("differences in weather forecasts ")
                         weather_data = read_weather_data(park)
                         labels = weather_data[0].get('labels')
                         colors = ['dark', 'primary', 'secondary']
@@ -95,33 +94,33 @@ def get_graph():
                                             "color": color,
                                             "data": predicted_weather})
                         datasets.append({"label": "Målt vind", "color": "info", "data": read_wind_data(park, json = False)[0]})
-                        data.append({"title": f"Meldt og målt vind for {park.replace('aa', 'å').capitalize()}",
+                        data.append({"title": f"Wind forecasts and measurement {park.replace('aa', 'å').capitalize()}",
                             "labels": labels,
                             "datasets": datasets,
-                            "xAxis": "Klokkeslett",
+                            "xAxis": "Time",
                             "yAxis": "m/s"})
                     if availability_reduction and len(factor_data.get('abnormally_low_production_hours'))<6:
-                        factors.append("lavere tilgjengelighet enn meldt")
+                        factors.append("lower availability than reported")
                         availability = read_availability_data(park)
                         data.append(availability)
-                    if len(factor_data.get('abnormally_low_production_hours'))>2: factors = ['ising']
+                    if len(factor_data.get('abnormally_low_production_hours'))>2: factors = ['icing']
                 else:
-                    factors.append("ising")
-                exp_str = exp_str+"på grunn av "+list_to_str(factors)
+                    factors.append("icing")
+                exp_str = exp_str+"due to "+list_to_str(factors)
             else:
                 availability = read_availability_data(parks[0])
-                exp_str = exp_str+"lavere tilgjengelighet enn forventet "
+                exp_str = exp_str+"lower availability than reported "
                 price = {
-                        "title": f"Prisdata for {price_area}, ({park.capitalize()})",
+                        "title": f"Price data for {price_area}, ({park.capitalize()})",
                         "labels": availability.get("labels"),
-                        "datasets": [{"label": "Spotpris", "color": "dark", "data": list(read_price('spot', price_area)['value'].values)}, 
-                                    {"label": "Reguleringspris", "color": "info", "data":list(read_price('reg', price_area)['value'].values)}],
-                        "xAxis": "Klokkeslett",
+                        "datasets": [{"label": "Spotprice", "color": "dark", "data": list(read_price('spot', price_area)['value'].values)}, 
+                                    {"label": "Regulationprice", "color": "info", "data":list(read_price('reg', price_area)['value'].values)}],
+                        "xAxis": "Time",
                         "yAxis": "€/MWh"
                     }
                 data.append(price)
             return_data.append({'park': park, 
-                                'title': {'text': f"Ubalansekostnader for {park.capitalize()}"}, 
+                                'title': {'text': f"Imbalance costs for {park.capitalize()}"}, 
                                 'subtitle': {'text': exp_str}, 
                                 'charts' : data, 
                                 'color': determine_revenue_grade(calc_revenue(park), calc_dayahead_revenue(park), park),
@@ -129,14 +128,14 @@ def get_graph():
             data = []
         high_volume_imbalance_parks = [p for p, data in loss_factors.items() if data.get('volume_abnormality') and p not in unprofitable_parks]
         for park in high_volume_imbalance_parks:
-                exp_str = "Høye ubalanse volum "
+                exp_str = "Large imbalance volumes "
                 factors = []
                 forecast = read_forecast_data(park)
                 data.append(forecast)
                 less_wind, model_disagreement, availability_reduction, icing = explain_volume_imbalance(park)
                 if not icing or len(factor_data.get('abnormally_low_production_hours'))<12:
                     if less_wind or model_disagreement:
-                        factors.append("avvik i værmeldingene")
+                        factors.append("deviation in weather forecasts")
                         weather_data = read_weather_data(park)
                         labels = weather_data[0].get('labels')
                         colors = ['dark', 'primary', 'secondary']
@@ -148,22 +147,22 @@ def get_graph():
                             datasets.append({"label": label,
                                             "color": color,
                                             "data": predicted_weather})
-                        datasets.append({"label": "Målt vind", "color": "info", "data": read_wind_data(park, json = False)[0]})
-                        data.append({"title": f"Meldt og målt vind for {park.replace('aa', 'å').capitalize()}",
+                        datasets.append({"label": "Measured wind", "color": "info", "data": read_wind_data(park, json = False)[0]})
+                        data.append({"title": f"Forecasted and measured wind for {park.replace('aa', 'å').capitalize()}",
                             "labels": labels,
                             "datasets": datasets,
-                            "xAxis": "Klokkeslett",
+                            "xAxis": "Time",
                             "yAxis": "m/s"})
                     if availability_reduction:
-                        factors.append("avvik i tilgjengelighet")
+                        factors.append("deviation in availability")
                         availability = read_availability_data(park)
                         data.append(availability)
                     if len(factor_data.get('abnormally_low_production_hours'))>6: factors = ['ising']
                 else: 
                     factors = ['ising']
                 return_data.append({'park': park, 
-                                    'title': {'text': f"Ubalansevolum for {park.capitalize()}"}, 
-                                    'subtitle': {'text': exp_str+"på grunn av "+list_to_str(factors)}, 
+                                    'title': {'text': f"Imbalancevolume for {park.capitalize()}"}, 
+                                    'subtitle': {'text': exp_str+"because of "+list_to_str(factors)}, 
                                     'charts' : data, 
                                     'color': determine_revenue_grade(calc_revenue(park), calc_dayahead_revenue(park), park),
                                     'imbalance': calc_revenue(park)-calc_dayahead_revenue(park)})
@@ -189,8 +188,8 @@ def get_graph():
                             datasets.append({"label": label,
                                             "color": color,
                                             "data": predicted_weather})
-                        datasets.append({"label": "Målt vind", "color": "info", "data": read_wind_data(park, json = False)[0]})
-                        data.append({"title": f"Meldt og målt vind for {park.replace('aa', 'å').capitalize()}",
+                        datasets.append({"label": "Measured wind", "color": "info", "data": read_wind_data(park, json = False)[0]})
+                        data.append({"title": f"Forecasted and measured wind for {park.replace('aa', 'å').capitalize()}",
                             "labels": labels,
                             "datasets": datasets,
                             "xAxis": "Klokkeslett",

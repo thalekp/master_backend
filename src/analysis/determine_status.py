@@ -12,8 +12,8 @@ def determine_revenue_grade(revenue,dayahead_revenue = None, park_name = None):
     else:
         median = load_revenue_median(park_name)
         stdev = load_revenue_stdev(park_name)
-    error_level = median-5*stdev
-    warning_level = median-2*stdev
+    error_level = median-stdev
+    warning_level = median-0.1*stdev
     
     
     if metric < error_level:
@@ -31,9 +31,10 @@ def determine_volume_grade(produced_volume, dayahead_volume = None, park_name = 
     median = load_diff_production_median(park_name)
     stdev = load_diff_production_std(park_name)
     
-    error_level = median-1.5*stdev
+    error_level = median-1.6*stdev
     warning_level = median-0.9*stdev
-        
+    
+    print(f"determining volume grade of {park_name}: {(metric-median)/stdev}")
     
     if metric < error_level:
         return "error"

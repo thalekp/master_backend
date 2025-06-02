@@ -36,6 +36,7 @@ def store_park_revenue_stats(parks):
     total_revenue = [sum([all_data[park]['all_revenue'][i] for park in parks]) for i in range(len(all_data[parks[0]]['all_revenue']))]
     total_difference = [sum([all_data[park]['difference'][i] for park in parks]) for i in range(len(all_data[parks[0]]['difference']))]
 
+
     total_stats = {
         'park': 'total',
         'median': statistics.median(total_revenue),
@@ -51,4 +52,4 @@ def store_park_revenue_stats(parks):
     stats_df = pd.DataFrame(all_stats)
     stats_df.to_csv("files/revenue_stats.csv", index=False)
 
-store_park_revenue_stats(['klevberget', 'maalarberget', 'roan'])
+store_park_revenue_stats(['klevberget', 'maalarberget', 'roan', 'trattberget', 'lyckaas', 'frøya'])

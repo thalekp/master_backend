@@ -51,7 +51,7 @@ def list_to_str(list):
         return_str = list[0]
         for index in range(len(list[1:])):
             if index == len(list)-2:
-                return_str = return_str+" og "+list[index+1]
+                return_str = return_str+" and "+list[index+1]
             else:
                 return_str = return_str+", "+list[index+1]
         return return_str
@@ -77,23 +77,25 @@ def coherent_list(list):
     else: return True
     
 def sort_parks(list, cost_dict):
-    red_parks = sorted([p for p in list if p.get('color').get('ubalansekostnad') == 'error'], key=lambda x: cost_dict.get(x.get('park')))
-    yellow_parks = sorted([p for p in list if p.get('color').get('ubalansekostnad') == 'warning'], key=lambda x: cost_dict.get(x.get('park')))
-    green_parks = sorted([p for p in list if p.get('color').get('ubalansekostnad') == 'success'], key=lambda x: cost_dict.get(x.get('park')))
+    red_parks = sorted([p for p in list if p.get('color').get('imbalancecost') == 'error'], key=lambda x: cost_dict.get(x.get('park')))
+    yellow_parks = sorted([p for p in list if p.get('color').get('imbalancecost') == 'warning'], key=lambda x: cost_dict.get(x.get('park')))
+    green_parks = sorted([p for p in list if p.get('color').get('imbalancecost') == 'success'], key=lambda x: cost_dict.get(x.get('park')))
     
-    #return sorted(list, key = lambda ele: cost_dict.get(ele.get('park')))
-    return red_parks+yellow_parks+green_parks
+    print(list)
+    print (cost_dict)
+
+    return red_parks + yellow_parks + green_parks
 
 def get_hd_day_report():
     loss_factors = determine_loss_factors()
     unprofitable_parks = get_unprofitable_parks()
     
     if len(unprofitable_parks)>0: 
-        subtitle = f"I dag så vi store ubalansekostnader på {list_to_str(list([key.replace('aa', 'å').capitalize() for key in unprofitable_parks.keys()]))}. "
+        subtitle = f"Today there were big imbalance costs in {list_to_str(list([key.replace('aa', 'å').capitalize() for key in unprofitable_parks.keys()]))}. "
     else: 
-        subtitle = "I dag var en bra dag, og ingen parker hadde store ubalansekostnader. "
+        subtitle = "Today there were no big imbalance costs.. "
     high_volume_imbalance_parks = [park for park, data in loss_factors.items() if data.get('volume_abnormality') and park not in unprofitable_parks]
-    subtitle = subtitle+f"Også ubalansevolum på {list_to_str(high_volume_imbalance_parks)}."
+    subtitle = subtitle+f"Also imbalance volume in {list_to_str(high_volume_imbalance_parks)}."
     
     lf = determine_loss_factors()
     rows = []
@@ -101,34 +103,43 @@ def get_hd_day_report():
     for p in lf.keys():
         if lf.get(p).get('volume_abnormality'):
             less_wind, model_disagreement, availability_reduction, icing = explain_volume_imbalance(p)
-            if len(lf.get(p).get('abnormally_low_production_hours'))>2: arsak = 'ising'
+            if len(lf.get(p).get('abnormally_low_production_hours'))>2: arsak = 'icing'
             else:
                 if less_wind or model_disagreement:
-                    arsak = "vindavvik"
+                    arsak = "forecast dev"
                 elif availability_reduction:
-                    arsak = "redusert tilgjengelighet"
+                    arsak = "reduced availability"
                 else:
-                    arsak = "ising"
+                    arsak = "icing"
         else:
-            arsak = "høye priser"
+            arsak = "high prices"
         dayahead_vol, prod_vol = read_forecast_data(p, json = False)
         revenue = calc_revenue(p)
         dayahead_revenue = calc_dayahead_revenue(p)
         cost_dict[p] = revenue-dayahead_revenue
-        rows.append({
-            'park': p,
-            'ubalansevolum': str(int(round(sum(prod_vol)-sum(dayahead_vol))))+" MW",
-            'ubalansekostnad': '€ '+str(int(round((revenue-dayahead_revenue)))),
-            'årsak': arsak,
-            'color': {"ubalansekostnad": determine_revenue_grade(revenue, dayahead_revenue, p), 'ubalansevolum': determine_volume_grade(sum(prod_vol), sum(dayahead_vol), p)}
-            },)
+        
+        imbalancevolume = int(round(sum(prod_vol)-sum(dayahead_vol)))
+        formatted_imbalancevolume = f"{imbalancevolume:,} MW".replace(",", " ")
+        
+        imbalancecost = int(round(revenue - dayahead_revenue))
+        formatted_imbalancecost = f"€ {imbalancecost:,}".replace(",", " ")
+        
+        if determine_revenue_grade(revenue, dayahead_revenue, p)!="success" or determine_volume_grade(sum(prod_vol), sum(dayahead_vol), p) != "success" or arsak =="icing":
+            rows.append({
+                'pricearea': price_areas().get(p),
+                'park': p,
+                'imbalancevolume': formatted_imbalancevolume,
+                'imbalancecost': formatted_imbalancecost,
+                'cause': arsak,
+                'color': {"imbalancecost": determine_revenue_grade(revenue, dayahead_revenue, p), 'imbalancevolume': determine_volume_grade(sum(prod_vol), sum(dayahead_vol), p)}
+                },)
             
     
     columns = [
         { 'name': "park", 'align': "left" },
-        { 'name': "ubalansevolum", 'align': "left" },
-        { 'name': "ubalansekostnad", 'align': "left" },
-        { 'name': "årsak", 'align': "right" },
+        { 'name': "imbalancevolume", 'align': "left" },
+        { 'name': "imbalancecost", 'align': "left" },
+        { 'name': "cause", 'align': "right" },
     ]
     
     
@@ -149,20 +160,20 @@ def get_hd_day_report():
     date = get_date()
     worst_hours, loss_amount = get_critical_hours(date)  
     graph ={
-            "title": "Inntekt oversikt",
-            "description": str(int(round(loss_amount, 2)*100))+"% av kostnadene falt i det uthevede området.",
+            "title": "Income overview",
+            "description": str(int(round(loss_amount, 2)*100))+"% of costs are due to the highlighted area.",
             "labels": labels,
-            "datasets": [{"label": "Dayahead inntjening", "color": "light", "data": np.cumsum(np.array(all_dayahead_earnings).sum(axis=0)).tolist(), "meta": get_blame_hours(date)}, 
-                         {"label": "Total inntjening", "color": "info","data":np.cumsum(np.array(all_actual_earnings).sum(axis=0)).tolist()}],
-            "xAxis": "Klokkeslett",
-            "yAxis": "Euro overskudd",
+            "datasets": [{"label": "Dayahead revenue", "color": "light", "data": np.cumsum(np.array(all_dayahead_earnings).sum(axis=0)).tolist(), "meta": get_blame_hours(date)}, 
+                         {"label": "Total revenue", "color": "info","data":np.cumsum(np.array(all_actual_earnings).sum(axis=0)).tolist()}],
+            "xAxis": "Time",
+            "yAxis": "Euro revenue",
             "annotation": {
                 "xMin": int(worst_hours[0]),
                 "xMax": int(worst_hours[-1]),
                 "label": "critical hours"
-            }
+               }
         }
     
         
-    
-    return {'title': 'Store ubalansekostnader', 'subtitle': subtitle, 'blame': blame, 'graph': graph}
+    print(blame)
+    return {'title': 'Big imbalance costs', 'subtitle': subtitle, 'blame': blame, 'graph': graph}

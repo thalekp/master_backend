@@ -35,12 +35,12 @@ def get_date():
     return target_day
 
 def price_areas():
-    return {'roan': 'NO3', 'klevberget': 'SE2', 'maalarberget': 'SE3'}
+    return {'roan': 'NO3', 'frøya': 'NO3', 'trattberget': 'SE2', 'klevberget': 'SE2', 'maalarberget': 'SE3', 'lyckaas': 'SE3'}
 
 def price_areas_list():
     return ['NO3', 'SE2', 'SE3']
 
 def get_price_area_parks(price_area):
-    if price_area == 'NO3': return ['roan']
-    if price_area == 'SE2': return ['klevberget']
-    if price_area == 'SE3': return ['maalarberget']
+    if price_area == 'NO3': return ['roan', 'frøya']
+    if price_area == 'SE2': return ['klevberget', 'trattberget']
+    if price_area == 'SE3': return ['maalarberget', 'lyckaas']

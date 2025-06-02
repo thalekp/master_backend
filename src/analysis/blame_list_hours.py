@@ -37,8 +37,8 @@ def get_blame_hours(target_date):
                 largest_cost = park_revenue
                 blame_park = park
                 
-        if total_cost<0: blame_list.append(f"{int(round(min(largest_cost/total_cost, 1.0), 2)*100)}% av kostnadene pga {blame_park.capitalize()}")
-        else: blame_list.append("alle parker i overskudd")
+        if total_cost<0: blame_list.append(f"{int(round(min(largest_cost/total_cost, 1.0), 2)*100)}% of cost because of {blame_park.capitalize()}")
+        else: blame_list.append("all parks have positive revenue")
     return blame_list
 
 
