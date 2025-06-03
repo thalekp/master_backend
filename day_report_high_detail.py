@@ -15,6 +15,7 @@ from src.read_data import read_price, read_intraday_volumes
 from src.analysis.critical_revenue_loss_hours import get_critical_hours
 from src.analysis.blame_list_hours import get_blame_hours
 from src.analysis.park_imbalance_lists import actual_earning, dayahead_earning
+from src.analysis.extreme_prices import find_extreme_prices
 
 
 def enter_new_line(str):
@@ -80,9 +81,6 @@ def sort_parks(list, cost_dict):
     red_parks = sorted([p for p in list if p.get('color').get('imbalancecost') == 'error'], key=lambda x: cost_dict.get(x.get('park')))
     yellow_parks = sorted([p for p in list if p.get('color').get('imbalancecost') == 'warning'], key=lambda x: cost_dict.get(x.get('park')))
     green_parks = sorted([p for p in list if p.get('color').get('imbalancecost') == 'success'], key=lambda x: cost_dict.get(x.get('park')))
-    
-    print(list)
-    print (cost_dict)
 
     return red_parks + yellow_parks + green_parks
 
@@ -102,6 +100,8 @@ def get_hd_day_report():
     cost_dict = {}
     for p in lf.keys():
         if lf.get(p).get('volume_abnormality'):
+            xp = find_extreme_prices(price_areas().get(p))
+            if len(xp)>0: arsak = "extreme prices and"
             less_wind, model_disagreement, availability_reduction, icing = explain_volume_imbalance(p)
             if len(lf.get(p).get('abnormally_low_production_hours'))>2: arsak = 'icing'
             else:
@@ -111,6 +111,7 @@ def get_hd_day_report():
                     arsak = "reduced availability"
                 else:
                     arsak = "icing"
+            if len(xp)>0: arsak = "extreme prices and "+arsak
         else:
             arsak = "high prices"
         dayahead_vol, prod_vol = read_forecast_data(p, json = False)
@@ -158,22 +159,43 @@ def get_hd_day_report():
             all_actual_earnings.append(actual_earnings)
     
     date = get_date()
-    worst_hours, loss_amount = get_critical_hours(date)  
+    worst_hours, loss_amount = get_critical_hours(date)
+    
+    hourly_blame, parks_to_blame = get_blame_hours(date)
+    if len(worst_hours)>0:
+        cleaned_pb = [item.strip() for item in parks_to_blame if item.strip()]
+        wp_list = [f"{list_to_str([item.strip() for item in parks_to_blame.get(p) if item.strip()])} at {p.capitalize()}" for p in cleaned_pb]
+        wp_str = list_to_str(wp_list)+" in"
+        wp_str = str(int(round(loss_amount, 2)*100))+f"% of costs are due to {list_to_str(wp_list)} in the highlighted timesteps."
+    else:
+        wp_str = "No large imbalance costs"
+    
+    if len(worst_hours)>0:
+        xmin = int(worst_hours[0])
+        xmax = int(worst_hours[-1])
+    else:
+        xmin = None
+        xmax = None
+    
+    
     graph ={
             "title": "Income overview",
-            "description": str(int(round(loss_amount, 2)*100))+"% of costs are due to the highlighted area.",
+            "description": wp_str,
             "labels": labels,
-            "datasets": [{"label": "Dayahead revenue", "color": "light", "data": np.cumsum(np.array(all_dayahead_earnings).sum(axis=0)).tolist(), "meta": get_blame_hours(date)}, 
+            "datasets": [{"label": "Dayahead revenue", "color": "light", "data": np.cumsum(np.array(all_dayahead_earnings).sum(axis=0)).tolist(), "meta": hourly_blame}, 
                          {"label": "Total revenue", "color": "info","data":np.cumsum(np.array(all_actual_earnings).sum(axis=0)).tolist()}],
             "xAxis": "Time",
             "yAxis": "Euro revenue",
             "annotation": {
-                "xMin": int(worst_hours[0]),
-                "xMax": int(worst_hours[-1]),
+                "xMin": xmin,
+                "xMax": xmax,
                 "label": "critical hours"
                }
         }
     
-        
-    print(blame)
-    return {'title': 'Big imbalance costs', 'subtitle': subtitle, 'blame': blame, 'graph': graph}
+    if len(unprofitable_parks)>0: 
+        title = 'High imbalance costs'
+    else:
+        title = 'Low imbalance costs'
+        subtitle = 'There were no high prices or imbalance costs today. '
+    return {'title': title, 'subtitle': subtitle, 'blame': blame, 'graph': graph}

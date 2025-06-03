@@ -9,7 +9,7 @@ from src.analysis.determine_status import determine_revenue_grade, determine_off
 from src.component_data.park_report import park_report
 from services.constants import get_date
 from services.parks_list import get_all_parks
-from src.component_data.dashboard_data import generate_dashboard_data
+from dashboard_data import generate_dashboard_data
 from src.component_data.park_cards import generate_park_cards
 from src.read_data import read_forecast_data
 from datetime import datetime
@@ -80,11 +80,4 @@ def get_dayreport():
 
 @app.get("/api/dashboard_cards")
 def get_dashboard_data():
-    if high_detail:
-        return generate_dashboard_data()
-    else:
-        return {'labels': ['total'], 
-                'datasets': [{'label': 'Revenues', 'color': 'info', 'data': []}, 
-                             {'label': 'Grades', 'color': 'info', 'data': []},
-                             {'label': 'Offsets', 'color': 'info', 'data': []}, 
-                             {'label': 'Absolute Offset', 'color': 'info', 'data': []}]}
+    return generate_dashboard_data()

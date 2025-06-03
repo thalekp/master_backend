@@ -32,20 +32,25 @@ def get_critical_hours(target_date):
     num_top_losses = 7
     top_loss_indices = np.argsort(hourly_revenue)[:num_top_losses]
     worst_hour = top_loss_indices[0]
-    worst_hours = [worst_hour]
+    if hourly_revenue[worst_hour]<0:
+        worst_hours = [worst_hour]
 
-    for idx in top_loss_indices[1:]:
-        in_sequence = False
-        for hour in worst_hours:
-            if abs(hour-idx)==1:
-                in_sequence = True
-        if in_sequence:
-            worst_hours.append(idx)
-        else:
-            break
+        for idx in top_loss_indices[1:]:
+            in_sequence = False
+            for hour in worst_hours:
+                if abs(hour-idx)==1:
+                    in_sequence = True
+            if in_sequence:
+                worst_hours.append(idx)
+            else:
+                break
+    else:
+         return [], 0
+    
     
     total_wh_cost = sum([hourly_revenue[i] for i in worst_hours])
     loss_amount = total_wh_cost/sum([i for i in hourly_revenue if i<0])
+
     
     return sorted(worst_hours), loss_amount
 

@@ -50,7 +50,7 @@ def get_graph():
                         datasets.append({"label": label,
                                          "color": color,
                                          "data": predicted_weather})
-                    datasets.append({"label": "Målt vind", "color": "info", "data": read_wind_data(park, json = False)[0]})
+                    datasets.append({"label": "Measured wind", "color": "info", "data": read_wind_data(park, json = False)[0]})
                     data.append({"title": f"Meldt og målt vind for {park}",
                                 "labels": labels,
                                 "datasets": datasets,

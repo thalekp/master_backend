@@ -38,7 +38,7 @@ def list_to_str(list):
         return_str = list[0]
         for index in range(len(list[1:])):
             if index == len(list)-2:
-                return_str = return_str+" og "+list[index+1]
+                return_str = return_str+" and "+list[index+1]
             else:
                 return_str = return_str+", "+list[index+1]
         return return_str

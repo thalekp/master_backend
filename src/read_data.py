@@ -103,7 +103,7 @@ def read_intraday_volumes(price_area, target_day = None, json = True):
 def read_availability_data(park_name, target_day = None, json = True):
     labels = ["dayahead_planned_avl", "replan_planned_avl"]
     
-    return csv_to_data(park_name, labels, 'tilgjengelighet', "label", "value", target_day, json=json, y_axis_name="MWh")
+    return csv_to_data(park_name, labels, 'tilgjengelighet', "label", "value", target_day, title = f"Availability for {park_name}", json=json, y_axis_name="MWh")
     
 def read_wind_data(park_name, target_day = None, json = True):
     labels = ["ws_measured"]
@@ -139,7 +139,7 @@ def csv_to_data(park_name, labels, data_type, label_name, value_name, target_day
         target_day = get_date()
     all_hours = pd.date_range("00:00", "23:00", freq="1h").strftime("%H:%M")
     datasets = []
-    colors = ['info', 'dark', 'light']
+    colors = ['dark','info', 'light']
     
     for idx in range(len(labels)):
         label = labels[idx]
