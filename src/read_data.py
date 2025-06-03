@@ -13,7 +13,9 @@ legend_translation = {'spot': "Spotprice",
                       'ws_dnmi_dayahead': "Dayahead weather forecast",
                       'ws_meteomatics_replan': "Real time weather forecast",
                       'ws_arome_replan': "Real time weather forecast",
-                      'ws_dnmi_replan': "Real time weather forecast"}
+                      'ws_dnmi_replan': "Real time weather forecast",
+                      'intraday_vol_buy': 'Bought volume intraday',
+                      'intraday_vol_sell': 'Sold volume intraday'}
 
 def read_price(price_type, target_area, target_day=None):
     if price_type in ['spot', 'reg']:
@@ -74,7 +76,7 @@ def read_intraday_volumes(price_area, target_day = None, json = True):
     
     datasets = []
     
-    color_dict = {'intraday_vol_buy': 'info', 'intraday_vol_sell': 'dark'}
+    color_dict = {'intraday_vol_buy': 'error', 'intraday_vol_sell': 'info'}
     
     for label in labels:
         new_set = df.copy()
@@ -82,7 +84,7 @@ def read_intraday_volumes(price_area, target_day = None, json = True):
         values = new_set[label].fillna(0).round(2).tolist()
         if json:
             datasets.append({
-                    "label": f"{legend_translation.get('label')}",
+                    "label": f"{legend_translation.get(label)}",
                     "color": color_dict.get(label),
                     "data": values
                 })

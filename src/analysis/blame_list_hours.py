@@ -10,7 +10,6 @@ def get_blame_hours(target_date):
     all_parks = get_all_parks()
     price_area_dict = price_areas()
     worst_hours = get_critical_hours(target_date)[0]
-    print(f"Worst hours: {worst_hours}")
 
 
     produced_volumes = []
@@ -53,7 +52,7 @@ def get_blame_hours(target_date):
                 cause_str = "extreme prices "
                 binding_word = "and "
                 location_word = " at "
-            if hour in ue:
+            if hour in ue and blame_park != "lyckaas":
                 cause_str = f"{cause_str}{binding_word}icing "
                 location_word = " at "
             

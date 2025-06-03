@@ -106,14 +106,14 @@ def get_hd_day_report():
             if len(lf.get(p).get('abnormally_low_production_hours'))>2: arsak = 'icing'
             else:
                 if less_wind or model_disagreement:
-                    arsak = "forecast dev"
+                    arsak = "wind forecast dev"
                 elif availability_reduction:
                     arsak = "reduced availability"
                 else:
                     arsak = "icing"
             if len(xp)>0: arsak = "extreme prices and "+arsak
         else:
-            arsak = "high prices"
+            arsak = "wind forecast dev"
         dayahead_vol, prod_vol = read_forecast_data(p, json = False)
         revenue = calc_revenue(p)
         dayahead_revenue = calc_dayahead_revenue(p)

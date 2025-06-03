@@ -2,14 +2,14 @@ from fastapi import FastAPI
 from services.config import high_detail
 from fastapi.middleware.cors import CORSMiddleware
 import pandas as pd
-from src.component_data.generate_graphs import get_graph
+from generate_graphs import get_graph
 from src.calculations.calc_revenue import calc_revenue
 from src.calculations.calc_dayahead_revenue import calc_dayahead_revenue
 from src.analysis.determine_status import determine_revenue_grade, determine_offset
 from src.component_data.park_report import park_report
 from services.constants import get_date
 from services.parks_list import get_all_parks
-from dashboard_data import generate_dashboard_data
+from src.component_data.dashboard_data import generate_dashboard_data
 from src.component_data.park_cards import generate_park_cards
 from src.read_data import read_forecast_data
 from datetime import datetime

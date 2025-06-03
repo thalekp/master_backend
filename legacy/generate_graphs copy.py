@@ -69,7 +69,7 @@ def get_graph():
                 overlap_hours = sorted(list(buy_hours_set & high_price_hours_set))
                 if overlap_hours:
                     exp_str = exp_str+"coinciding with high prices "
-                    availability = read_availability_data(parks[0])
+                    availability = read_availability_data(park)
                     price = {
                         "title": f"Pricedata for {price_area}, ({park.capitalize()})",
                         "labels": availability.get("labels"),
@@ -159,16 +159,13 @@ def get_graph():
                                     'imbalance': calc_revenue(park)-calc_dayahead_revenue(park)})
                 data = []
     else:
-        print("else")
         parks = get_all_parks()
         
         high_volume_imbalance_parks = [park for park, data in loss_factors.items() if data.get('volume_abnormality') and park not in unprofitable_parks]
-        print(high_volume_imbalance_parks)
         for park in high_volume_imbalance_parks:
                 forecast = read_forecast_data(park)
                 data.append(forecast)
                 less_wind, model_disagreement, availability_reduction, icing = explain_volume_imbalance(park)
-                print(icing)
                 if not icing:
                     print("it is true")
                     print(less_wind)
