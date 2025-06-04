@@ -41,7 +41,7 @@ def get_forecast(parkname:str):
     else: 
         return get_ld_graph(parkname)
     
-@app.get("/api/dashboard_graph")
+@app.get("/api/dashboard_graph/")
 def get_forecast():
     result = get_graph()
     return result
@@ -78,6 +78,6 @@ def get_dayreport():
             "report": get_ld_day_report()
         }
 
-@app.get("/api/dashboard_cards")
+@app.get("/api/dashboard_cards/")
 def get_dashboard_data():
     return generate_dashboard_data()
